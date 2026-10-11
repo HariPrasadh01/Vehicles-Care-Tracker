@@ -63,3 +63,11 @@ service becomes `DUE_SOON`.
 
 ## Next steps
 User accounts (Spring Security + JWT), PostgreSQL, Docker, push notifications, receipt photo upload, charts.
+
+## Author
+
+Hari Prasadh
+
+GitHub: https://github.com/HariPrasadh01
+
+Linkedin: https://www.linkedin.com/in/hari-prasadh01
