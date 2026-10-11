@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vehicle Care Tracker</title>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:system-ui,sans-serif;margin:0;background:#f4f6f8;color:#222}
+  main{max-width:900px;margin:0 auto;padding:16px}
+  h1{margin:8px 0 16px;font-size:24px}
+  h3{margin:0 0 10px}
+  .card{background:#fff;border-radius:10px;padding:16px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+  .top{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .top select{flex:1;min-width:180px}
+  form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  label{font-size:12px;color:#555;display:flex;flex-direction:column;gap:3px}
+  input,select,button{padding:9px;border:1px solid #ccc;border-radius:6px;font-size:14px;width:100%}
+  button{background:#2563eb;color:#fff;border:none;cursor:pointer;width:auto}
+  button.sec{background:#e5e7eb;color:#222}
+  button.del{background:#dc2626;padding:5px 10px;font-size:12px}
+  button.ren{background:#059669;padding:5px 10px;font-size:12px}
+  .tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+  .tabs button{background:#e5e7eb;color:#222}
+  .tabs button.on{background:#2563eb;color:#fff}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+  .stat{background:#f1f5f9;border-radius:8px;padding:12px}
+  .stat b{display:block;font-size:20px}
+  .stat span{font-size:12px;color:#555}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #eee;gap:10px}
+  .row:last-child{border:none}
+  .meta{font-size:13px;color:#666}
+  .badge{font-size:12px;padding:3px 8px;border-radius:10px;color:#fff;margin-left:6px;white-space:nowrap}
+  .OK{background:#16a34a}.DUE_SOON,.EXPIRING_SOON{background:#d97706}.OVERDUE,.EXPIRED{background:#dc2626}
+  #msg{color:#dc2626;font-size:13px;min-height:18px;margin-bottom:8px}
+  .hide{display:none}
+</style>
+</head>
+<body>
+<main>
+  <h1>Vehicle Care Tracker</h1>
+  <div id="msg"></div>
+
+  <div class="card">
+    <div class="top">
+      <select id="vehicle"></select>
+      <button class="sec" id="toggleAdd">+ Add vehicle</button>
+      <button class="del" id="delVehicle">Delete vehicle</button>
+    </div>
+    <form id="vform" class="hide" style="margin-top:12px">
+      <label>Name<input id="v_name" placeholder="My Swift" required></label>
+      <label>Type<select id="v_type"><option>CAR</option><option>BIKE</option><option>SCOOTER</option><option>AUTO</option><option>TRUCK</option><option>OTHER</option></select></label>
+      <label>Registration no.<input id="v_reg" placeholder="TN 38 AB 1234"></label>
+      <label>Fuel<select id="v_fuel"><option>PETROL</option><option>DIESEL</option><option>CNG</option><option>LPG</option><option>OTHER</option></select></label>
+      <label>Current odometer (km)<input id="v_odo" type="number" min="0" value="0"></label>
+      <label>&nbsp;<button type="submit">Save vehicle</button></label>
+    </form>
+  </div>
+
+  <div id="app" class="hide">
+    <div class="tabs">
+      <button data-tab="overview" class="on">Overview</button>
+      <button data-tab="fuel">Fuel</button>
+      <button data-tab="service">Service</button>
+      <button data-tab="docs">Documents</button>
+    </div>
+
+    <section id="tab-overview">
+      <div class="card"><h3>Summary</h3><div id="stats" class="stats"></div></div>
+      <div class="card"><h3>Reminders</h3><div id="reminders"></div></div>
+    </section>
+
+    <section id="tab-fuel" class="hide">
+      <div class="card">
+        <h3>Add fuel fill</h3>
+        <form id="fform">
+          <label>Date<input id="f_date" type="date" required></label>
+          <label>Odometer (km)<input id="f_odo" type="number" min="0" required></label>
+          <label>Litres (kg for CNG)<input id="f_qty" type="number" step="0.01" min="0.01" required></label>
+          <label>Total cost<input id="f_cost" type="number" step="0.01" min="0" required></label>
+          <label>Full tank?<select id="f_full"><option value="true">Yes</option><option value="false">No (partial)</option></select></label>
+          <label>&nbsp;<button type="submit">Add</button></label>
+        </form>
+      </div>
+      <div class="card"><div id="fuelList"></div></div>
+    </section>
+
+    <section id="tab-service" class="hide">
+      <div class="card">
+        <h3>Add service record</h3>
+        <form id="sform">
+          <label>Type<select id="s_type"><option>GENERAL_SERVICE</option><option>OIL_CHANGE</option><option>TYRE</option><option>BATTERY</option><option>BRAKE</option><option>REPAIR</option><option>OTHER</option></select></label>
+          <label>Date<input id="s_date" type="date" required></label>
+          <label>Odometer (km)<input id="s_odo" type="number" min="0" required></label>
+          <label>Cost<input id="s_cost" type="number" step="0.01" min="0"></label>
+          <label>Next due date<input id="s_nd" type="date"></label>
+          <label>Next due at (km)<input id="s_nk" type="number" min="1"></label>
+          <label>Notes<input id="s_desc" maxlength="300"></label>
+          <label>&nbsp;<button type="submit">Add</button></label>
+        </form>
+      </div>
+      <div class="card"><div id="serviceList"></div></div>
+    </section>
+
+    <section id="tab-docs" class="hide">
+      <div class="card">
+        <h3>Add document</h3>
+        <form id="dform">
+          <label>Type<select id="d_type"><option>INSURANCE</option><option>POLLUTION_CERTIFICATE</option><option>REGISTRATION</option><option>FITNESS</option><option>ROAD_TAX</option><option>DRIVING_LICENSE</option><option>OTHER</option></select></label>
+          <label>Expiry date<input id="d_exp" type="date" required></label>
+          <label>Policy / certificate no.<input id="d_ref" maxlength="60"></label>
+          <label>Remind days before<input id="d_rem" type="number" min="0" max="365" value="30"></label>
+          <label>&nbsp;<button type="submit">Add</button></label>
+        </form>
+      </div>
+      <div class="card"><div id="docList"></div></div>
+    </section>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+let vehicles = [], docsCache = [];
+
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function pretty(s) { s = String(s).replace(/_/g, ' ').toLowerCase(); return s.charAt(0).toUpperCase() + s.slice(1); }
+function money(n) { return n == null ? '-' : Number(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+function today() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function vid() { return $('vehicle').value; }
+function err(e) { $('msg').textContent = e ? e.message : ''; }
+
+async function api(path, method, body) {
+  const opts = {method: method || 'GET'};
+  if (body !== undefined) { opts.headers = {'Content-Type': 'application/json'}; opts.body = JSON.stringify(body); }
+  const res = await fetch(path, opts);
+  if (!res.ok) {
+    let m = res.statusText;
+    try { const b = await res.json(); m = b.error + (b.fields ? ': ' + Object.values(b.fields).join(', ') : ''); } catch (e) {}
+    throw new Error(m);
+  }
+  return res.status === 204 ? null : res.json();
+}
+const guard = fn => async (...a) => { try { err(null); await fn(...a); } catch (e) { err(e); } };
+
+async function loadVehicles(selectId) {
+  vehicles = await api('/api/vehicles');
+  $('vehicle').innerHTML = vehicles.map(v => `<option value="${v.id}">${esc(v.name)}${v.registrationNumber ? ' (' + esc(v.registrationNumber) + ')' : ''}</option>`).join('');
+  if (selectId) $('vehicle').value = selectId;
+  $('app').classList.toggle('hide', vehicles.length === 0);
+  $('delVehicle').classList.toggle('hide', vehicles.length === 0);
+  if (vehicles.length === 0) { $('vform').classList.remove('hide'); return; }
+  await refresh();
+}
+
+async function refresh() {
+  if (!vid()) return;
+  await Promise.all([loadOverview(), loadFuel(), loadServices(), loadDocs()]);
+}
+
+async function loadOverview() {
+  const [s, rem] = await Promise.all([api(`/api/vehicles/${vid()}/summary`), api(`/api/reminders?vehicleId=${vid()}`)]);
+  $('stats').innerHTML = [
+    ['Odometer', s.currentOdometer + ' km'],
+    ['Avg mileage', s.averageMileage != null ? s.averageMileage + ' km/l' : '-'],
+    ['Last mileage', s.lastMileage != null ? s.lastMileage + ' km/l' : '-'],
+    ['Fuel cost / km', money(s.fuelCostPerKm)],
+    ['Fuel spent', money(s.totalFuelCost)],
+    ['Service spent', money(s.totalServiceCost)],
+    ['Total spent', money(s.totalSpent)]
+  ].map(([l, v]) => `<div class="stat"><b>${esc(v)}</b><span>${l}</span></div>`).join('');
+
+  $('reminders').innerHTML = rem.length ? rem.map(r => `
+    <div class="row"><div><strong>${esc(r.title)}</strong>
+      <span class="badge ${r.status}">${pretty(r.status)}</span>
+      <div class="meta">${r.dueDate ? 'by ' + r.dueDate : ''}${r.dueDate && r.dueOdometer ? ' or ' : ''}${r.dueOdometer ? 'at ' + r.dueOdometer + ' km' : ''}
+        ${r.daysLeft != null ? ' · ' + (r.daysLeft < 0 ? -r.daysLeft + ' days ago' : r.daysLeft + ' days left') : ''}
+        ${r.kmLeft != null ? ' · ' + (r.kmLeft <= 0 ? 'km limit reached' : r.kmLeft + ' km left') : ''}</div></div></div>`).join('')
+    : '<div class="meta">Nothing scheduled yet. Add a service with a next-due date/km, or add documents.</div>';
+}
+
+async function loadFuel() {
+  const rows = await api(`/api/vehicles/${vid()}/fuel`);
+  $('fuelList').innerHTML = rows.length ? rows.map(f => `
+    <div class="row"><div><strong>${f.fillDate}</strong> · ${f.odometer} km
+      <div class="meta">${f.quantity} L · ${money(f.totalCost)} (${money(f.pricePerUnit)}/L) · ${f.fullTank ? 'full tank' : 'partial'}</div></div>
+      <button class="del" data-del-fuel="${f.id}">Delete</button></div>`).join('')
+    : '<div class="meta">No fuel fills yet. Log at least two full-tank fills to see mileage.</div>';
+}
+
+async function loadServices() {
+  const rows = await api(`/api/vehicles/${vid()}/services`);
+  $('serviceList').innerHTML = rows.length ? rows.map(s => `
+    <div class="row"><div><strong>${pretty(s.serviceType)}</strong> · ${s.serviceDate} · ${s.odometer} km
+      <div class="meta">${s.cost != null ? 'Cost ' + money(s.cost) : ''} ${esc(s.description)}
+        ${s.nextDueDate || s.nextDueOdometer ? ' · next: ' + (s.nextDueDate || '') + (s.nextDueOdometer ? ' at ' + s.nextDueOdometer + ' km' : '') : ''}</div></div>
+      <button class="del" data-del-service="${s.id}">Delete</button></div>`).join('')
+    : '<div class="meta">No service records yet.</div>';
+}
+
+async function loadDocs() {
+  docsCache = await api(`/api/vehicles/${vid()}/documents`);
+  $('docList').innerHTML = docsCache.length ? docsCache.map(d => `
+    <div class="row"><div><strong>${pretty(d.documentType)}</strong>
+      <span class="badge ${d.status}">${d.daysLeft < 0 ? 'expired ' + (-d.daysLeft) + 'd ago' : d.daysLeft + 'd left'}</span>
+      <div class="meta">Expires ${d.expiryDate}${d.referenceNumber ? ' · ' + esc(d.referenceNumber) : ''}</div></div>
+      <div><button class="ren" data-renew="${d.id}">Renew</button> <button class="del" data-del-doc="${d.id}">Delete</button></div></div>`).join('')
+    : '<div class="meta">No documents yet. Add insurance, pollution certificate, etc.</div>';
+}
+
+// ---- events ----
+$('vehicle').onchange = guard(refresh);
+$('toggleAdd').onclick = () => $('vform').classList.toggle('hide');
+
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+  ['overview', 'fuel', 'service', 'docs'].forEach(t => $('tab-' + t).classList.toggle('hide', t !== b.dataset.tab));
+});
+
+$('vform').onsubmit = guard(async e => {
+  e.preventDefault();
+  const v = await api('/api/vehicles', 'POST', {
+    name: $('v_name').value, type: $('v_type').value, registrationNumber: $('v_reg').value,
+    fuelType: $('v_fuel').value, currentOdometer: parseInt($('v_odo').value || '0')
+  });
+  $('vform').reset(); $('vform').classList.add('hide');
+  await loadVehicles(v.id);
+});
+
+$('delVehicle').onclick = guard(async () => {
+  if (!confirm('Delete this vehicle and all its records?')) return;
+  await api('/api/vehicles/' + vid(), 'DELETE');
+  await loadVehicles();
+});
+
+$('fform').onsubmit = guard(async e => {
+  e.preventDefault();
+  await api(`/api/vehicles/${vid()}/fuel`, 'POST', {
+    fillDate: $('f_date').value, odometer: parseInt($('f_odo').value), quantity: parseFloat($('f_qty').value),
+    totalCost: parseFloat($('f_cost').value), fullTank: $('f_full').value === 'true'
+  });
+  $('fform').reset(); $('f_date').value = today(); await refresh();
+});
+
+$('sform').onsubmit = guard(async e => {
+  e.preventDefault();
+  await api(`/api/vehicles/${vid()}/services`, 'POST', {
+    serviceType: $('s_type').value, serviceDate: $('s_date').value, odometer: parseInt($('s_odo').value),
+    cost: $('s_cost').value ? parseFloat($('s_cost').value) : null,
+    description: $('s_desc').value || null,
+    nextDueDate: $('s_nd').value || null,
+    nextDueOdometer: $('s_nk').value ? parseInt($('s_nk').value) : null
+  });
+  $('sform').reset(); $('s_date').value = today(); await refresh();
+});
+
+$('dform').onsubmit = guard(async e => {
+  e.preventDefault();
+  await api(`/api/vehicles/${vid()}/documents`, 'POST', {
+    documentType: $('d_type').value, expiryDate: $('d_exp').value,
+    referenceNumber: $('d_ref').value || null, remindDaysBefore: parseInt($('d_rem').value || '30')
+  });
+  $('dform').reset(); $('d_rem').value = 30; await refresh();
+});
+
+document.body.addEventListener('click', guard(async e => {
+  const t = e.target;
+  if (t.dataset.delFuel) { await api(`/api/vehicles/${vid()}/fuel/${t.dataset.delFuel}`, 'DELETE'); await refresh(); }
+  if (t.dataset.delService) { await api(`/api/vehicles/${vid()}/services/${t.dataset.delService}`, 'DELETE'); await refresh(); }
+  if (t.dataset.delDoc) { await api(`/api/vehicles/${vid()}/documents/${t.dataset.delDoc}`, 'DELETE'); await refresh(); }
+  if (t.dataset.renew) {
+    const d = docsCache.find(x => String(x.id) === t.dataset.renew);
+    const exp = prompt('New expiry date (yyyy-MM-dd):', d.expiryDate);
+    if (!exp) return;
+    await api(`/api/vehicles/${vid()}/documents/${d.id}`, 'PUT', {
+      documentType: d.documentType, expiryDate: exp, referenceNumber: d.referenceNumber,
+      notes: d.notes, remindDaysBefore: d.remindDaysBefore
+    });
+    await refresh();
+  }
+}));
+
+$('f_date').value = today(); $('s_date').value = today();
+guard(loadVehicles)();
+</script>
+</body>
+</html>
